@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
+  <title>📦 协议编解码游戏 · 发送者 & 接收者</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      font-family: 'Segoe UI', 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+    body {
+      background: linear-gradient(145deg, #0b1120 0%, #131e2f 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .game-container {
+      max-width: 1400px;
+      width: 100%;
+      background: rgba(18, 28, 40, 0.75);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(74, 144, 226, 0.25);
+      border-radius: 42px;
+      padding: 24px 28px 32px;
+      box-shadow: 0 25px 40px -10px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(0, 255, 255, 0.1) inset;
+    }
+    h1 {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 600;
+      font-size: 2.2rem;
+      letter-spacing: -0.01em;
+      color: #e3f2fd;
+      text-shadow: 0 4px 12px #0050b3;
+      margin-bottom: 6px;
+      padding-left: 8px;
+    }
+    h1 span {
+      background: #1e3a5f;
+      padding: 2px 16px;
+      border-radius: 60px;
+      font-size: 1rem;
+      font-weight: 400;
+      color: #9ac7ff;
+      border: 1px solid #2e5f8e;
+      letter-spacing: 0.3px;
+    }
+    .subtitle {
+      color: #a0c4e8;
+      margin-bottom: 28px;
+      padding-left: 12px;
+      font-weight: 400;
+      border-left: 5px solid #2a9d8f;
+    }
+    .protocol-badge {
+      display: inline-block;
+      background: #1f3a4b;
+      padding: 8px 20px;
+      border-radius: 40px;
+      font-family: 'JetBrains Mono', 'Cascadia Code', monospace;
+      font-size: 0.9rem;
+      color: #b3e0ff;
+      margin-bottom: 22px;
+      border: 1px dashed #3f8db3;
+      box-shadow: 0 2px 6px #00000033;
+    }
+    .dual-panel {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-top: 8px;
+    }
+    .panel {
+      background: #0e1a26c9;
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      border-radius: 32px;
+      padding: 22px 24px;
+      border: 1px solid #2a4b6e;
+      box-shadow: 0 15px 25px -8px #0000004d, inset 0 0 0 1px #ffffff0d;
+      transition: transform 0.15s ease;
+    }
+    .panel:hover {
+      border-color: #3c7aa6;
+    }
+    .panel-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+    .panel-header h2 {
+      font-weight: 500;
+      font-size: 1.9rem;
+      color: #d6eaff;
+      letter-spacing: -0.02em;
+    }
+    .icon-badge {
+      background: #1a445b;
+      width: 48px;
+      height: 48px;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      box-shadow: inset 0 2px 5px #00000055, 0 6px 8px #00000033;
+      border-bottom: 2px solid #5fa3d1;
+    }
+    .sender .icon-badge { background: #15455e; border-bottom-color: #4db8ff; }
+    .receiver .icon-badge { background: #1b4e4a; border-bottom-color: #2a9d8f; }
+
+    .input-area {
+      margin-bottom: 28px;
+    }
+    label {
+      display: block;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #9dc1e0;
+      margin-bottom: 8px;
+      font-weight: 500;
+    }
+    textarea {
+      width: 100%;
+      background: #030b12e0;
+      border: 1.5px solid #2c5777;
+      border-radius: 24px;
+      padding: 16px 20px;
+      color: #e2f0fa;
+      font-size: 1.2rem;
+      font-weight: 400;
+      resize: vertical;
+      min-height: 100px;
+      box-shadow: inset 0 6px 8px #00000055, 0 2px 0 #1a3b50;
+      transition: border 0.2s;
+      line-height: 1.5;
+    }
+    textarea:focus {
+      outline: none;
+      border-color: #3d9cd6;
+      box-shadow: 0 0 0 3px #1e4970, inset 0 2px 8px black;
+    }
+    .char-counter {
+      text-align: right;
+      font-size: 0.85rem;
+      color: #7eafd4;
+      margin-top: 6px;
+    }
+    .action-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 16px;
+      margin: 18px 0 20px;
+    }
+    .btn {
+      background: #1e405b;
+      border: none;
+      border-bottom: 3px solid #0e293d;
+      color: white;
+      padding: 12px 28px;
+      font-size: 1.2rem;
+      font-weight: 600;
+      border-radius: 50px;
+      cursor: pointer;
+      box-shadow: 0 6px 0 #0a1a26, 0 6px 12px black;
+      transition: all 0.08s ease-in;
+      letter-spacing: 0.5px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid #3f7faa;
+    }
+    .btn:hover {
+      background: #265e83;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 0 #0a1a26, 0 10px 18px black;
+    }
+    .btn:active {
+      transform: translateY(4px);
+      box-shadow: 0 2px 0 #0a1a26, 0 6px 12px black;
+    }
+    .btn.small {
+      padding: 8px 18px;
+      font-size: 1rem;
+      box-shadow: 0 4px 0 #0a1a26, 0 4px 8px black;
+    }
+    .noise-toggle {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: #0d1e2b;
+      padding: 5px 18px 5px 14px;
+      border-radius: 36px;
+      border: 1px solid #2c6280;
+    }
+    .noise-toggle label {
+      margin: 0;
+      text-transform: none;
+      font-size: 1rem;
+      color: #bdd6ec;
+      cursor: pointer;
+    }
+    input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+      accent-color: #e63946;
+      transform: scale(1.1);
+      margin-right: 4px;
+      cursor: pointer;
+    }
+    .packet-box {
+      background: #05121c;
+      border-radius: 22px;
+      padding: 18px 20px;
+      margin: 16px 0 10px;
+      border: 1px solid #1d5170;
+      box-shadow: inset 0 2px 6px #000000, 0 4px 6px #00000033;
+    }
+    .packet-title {
+      font-family: monospace;
+      color: #7fc3ff;
+      font-size: 0.9rem;
+      margin-bottom: 12px;
+      display: flex;
+      gap: 12px;
+    }
+    .hex-view {
+      background: #010b13;
+      padding: 14px 18px;
+      border-radius: 18px;
+      font-family: 'JetBrains Mono', 'Cascadia Mono', monospace;
+      font-size: 1.1rem;
+      word-break: break-all;
+      color: #b7e0ff;
+      border: 1px solid #2c6480;
+      box-shadow: inset 0 0 10px #00000077;
+      line-height: 1.6;
+      letter-spacing: 1px;
+    }
+    .field-detail {
+      margin-top: 14px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px 24px;
+      font-size: 0.95rem;
+      background: #0a1a28b3;
+      padding: 14px 18px;
+      border-radius: 20px;
+      color: #b8d4f0;
+      border-left: 6px solid #2a9d8f;
+    }
+    .status-row {
+      display: flex;
+      align-items: baseline;
+      gap: 10px 20px;
+      flex-wrap: wrap;
+      margin-top: 16px;
+    }
+    .badge {
+      background: #1a3f55;
+      padding: 6px 18px;
+      border-radius: 36px;
+      font-weight: 500;
+      color: #d1e7ff;
+      border: 1px solid #3f7b9e;
+    }
+    .badge.error {
+      background: #632c3c;
+      border-color: #e07c7c;
+      color: #ffcfcf;
+    }
+    .badge.success {
+      background: #1d5a4c;
+      border-color: #43b39b;
+    }
+    .receiver .decoded-text {
+      background: #0a1922;
+      padding: 16px 20px;
+      border-radius: 22px;
+      font-size: 1.3rem;
+      border: 1px solid #2d7a6b;
+      color: #ddf4ff;
+      font-weight: 500;
+      box-shadow: inset 0 2px 8px black;
+      margin: 16px 0 8px;
+    }
+    .arrow-symbol {
+      display: none;
+    }
+    @media (max-width: 760px) {
+      .dual-panel { grid-template-columns: 1fr; gap: 28px; }
+      .game-container { padding: 18px 16px; }
+      h1 { font-size: 1.8rem; }
+    }
+    .example-row {
+      display: flex;
+      gap: 8px;
+      margin-left: 8px;
+      flex-wrap: wrap;
+    }
+    hr {
+      border: 0.5px solid #214a63;
+      margin: 16px 0;
+    }
+    .footnote {
+      color: #6a93b5;
+      margin-top: 8px;
+      font-size: 0.9rem;
+      text-align: right;
+    }
+  </style>
+</head>
+<body>
+<div class="game-container">
+  <h1>
+    <span>📡</span> 协议·编解码竞技 
+    <span>SENDER ⇢ RECEIVER</span>
+  </h1>
+  <div class="subtitle">⚡ 自定义链路帧 · 前导码 0xAA · 长度 · 数据 · 异或校验</div>
+  <div class="protocol-badge">
+    📋 帧格式: [PREAMBLE 1B] [LENGTH 1B] [PAYLOAD...] [CHECKSUM 1B]  (校验 = LENGTH ⊕ PAYLOAD)
+  </div>
+
+  <div class="dual-panel">
+    <!-- 发送者面板 -->
+    <div class="panel sender">
+      <div class="panel-header">
+        <div class="icon-badge">📤</div>
+        <h2>发送者 · Sender</h2>
+      </div>
+      <div class="input-area">
+        <label>✏️ 输入载荷 (Payload) — 最大255字节</label>
+        <textarea id="payloadInput" placeholder="例如: Hello, 网络!&#10;或试试中文/数字..." maxlength="255">Hello 协议游戏</textarea>
+        <div class="char-counter">
+          <span id="charCount">0</span> / 255 字节 (UTF-8)
+        </div>
+      </div>
+      
+      <div class="action-row">
+        <button class="btn" id="encodeSendBtn">🚀 编码并发送</button>
+        <div class="noise-toggle">
+          <input type="checkbox" id="noiseCheckbox"> 
+          <label for="noiseCheckbox">⚡ 模拟传输错误 (随机比特翻转)</label>
+        </div>
+      </div>
+      <div class="example-row">
+        <button class="btn small" id="exampleHello">📟 示例 "Hello"</button>
+        <button class="btn small" id="exampleChinese">🌐 中文测试</button>
+        <button class="btn small" id="exampleLong">📊 长消息</button>
+      </div>
+
+      <div class="packet-box">
+        <div class="packet-title">
+          <span>📦 编码后的数据包 (十六进制)</span>
+          <span style="margin-left: auto; opacity:0.8;">🔽</span>
+        </div>
+        <div class="hex-view" id="senderHexPacket">—</div>
+        <div class="field-detail" id="senderPacketDetails">
+          前导码: — &nbsp;|&nbsp; 长度: — &nbsp;|&nbsp; 载荷(hex): — &nbsp;|&nbsp; 校验和: —
+        </div>
+      </div>
+      <div class="footnote">
+        ⚙️ 编码规则: 前导0xAA · 长度 · 数据 · 校验=XOR(长度, 数据)
+      </div>
+    </div>
+
+    <!-- 接收者面板 -->
+    <div class="panel receiver">
+      <div class="panel-header">
+        <div class="icon-badge">📥</div>
+        <h2>接收者 · Receiver</h2>
+      </div>
+      <div style="margin-bottom: 12px; display: flex; gap: 8px;">
+        <span class="badge" id="receiveStatusIcon">⏳ 等待数据</span>
+        <button class="btn small" id="decodeOnlyBtn" style="margin-left: auto;">🔄 重新解析</button>
+      </div>
+      
+      <div class="packet-box">
+        <div class="packet-title">📨 接收到的原始帧 (可能含噪)</div>
+        <div class="hex-view" id="receiverHexPacket">—</div>
+      </div>
+
+      <div class="status-row">
+        <span class="badge" id="preambleStatus">🔍 前导码: ?</span>
+        <span class="badge" id="checksumStatus">🧮 校验和: ?</span>
+        <span class="badge" id="lengthStatus">📏 长度字段: ?</span>
+      </div>
+
+      <div style="margin-top: 18px;">
+        <label>📄 解码后的载荷</label>
+        <div class="decoded-text" id="decodedPayloadDisplay">(尚未接收)</div>
+      </div>
+      
+      <div class="field-detail" id="receiverDetails" style="border-left-color: #3d9cd6;">
+        计算校验和: — &nbsp;|&nbsp; 实际载荷长度: — &nbsp;|&nbsp; 状态: —
+      </div>
+      <div class="footnote">
+        🛡️ 接收端验证前导码+校验和，错误时仍尝试解码
+      </div>
+    </div>
+  </div>
+  <hr>
+  <div style="display: flex; justify-content: space-between; color:#6f9ac0;">
+    <span>🎮 玩法：输入消息 → 编码 → 可开启噪声 → 接收端解析并验证</span>
+    <span>🧪 帧结构: AA | len | data... | checksum</span>
+  </div>
+</div>
+
+<script>
+  (function(){
+    "use strict";
+
+    // ----- 固定协议常量 -----
+    const PREAMBLE = 0xAA;          // 前导码
+
+    // DOM 元素
+    const payloadInput = document.getElementById('payloadInput');
+    const charCountSpan = document.getElementById('charCount');
+    const encodeSendBtn = document.getElementById('encodeSendBtn');
+    const noiseCheckbox = document.getElementById('noiseCheckbox');
+    const senderHexPacket = document.getElementById('senderHexPacket');
+    const senderPacketDetails = document.getElementById('senderPacketDetails');
+    const receiverHexPacket = document.getElementById('receiverHexPacket');
+    const decodedPayloadDisplay = document.getElementById('decodedPayloadDisplay');
+    const preambleStatus = document.getElementById('preambleStatus');
+    const checksumStatus = document.getElementById('checksumStatus');
+    const lengthStatus = document.getElementById('lengthStatus');
+    const receiverDetails = document.getElementById('receiverDetails');
+    const receiveStatusIcon = document.getElementById('receiveStatusIcon');
+    const decodeOnlyBtn = document.getElementById('decodeOnlyBtn');
+
+    // 示例按钮
+    const exampleHello = document.getElementById('exampleHello');
+    const exampleChinese = document.getElementById('exampleChinese');
+    const exampleLong = document.getElementById('exampleLong');
+
+    // 内部存储：当前接收到的原始字节 (Uint8Array) 用于重新解析
+    let currentReceivedBytes = null;
+
+    // ---------- 辅助函数 ----------
+    function updateCharCount() {
+      const text = payloadInput.value || '';
+      const encoder = new TextEncoder();
+      const bytes = encoder.encode(text);
+      const len = bytes.length;
+      charCountSpan.textContent = len;
+      if (len > 255) {
+        charCountSpan.style.color = '#ff8a8a';
+      } else {
+        charCountSpan.style.color = '#7eafd4';
+      }
+    }
+
+    // 字符串转字节 (限制最大255)
+    function stringToBytes(str) {
+      const encoder = new TextEncoder();
+      let bytes = encoder.encode(str);
+      if (bytes.length > 255) {
+        bytes = bytes.slice(0, 255);
+      }
+      return bytes;
+    }
+
+    // 字节数组转十六进制字符串 (空格分隔)
+    function bytesToHex(bytes) {
+      return Array.from(bytes).map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ');
+    }
+
+    // 计算校验和: 对长度字节 + payload逐字节异或
+    function computeChecksum(lengthByte, payloadBytes) {
+      let checksum = lengthByte;
+      for (let b of payloadBytes) {
+        checksum ^= b;
+      }
+      return checksum & 0xFF;
+    }
+
+    // ---------- 编码: 字符串 -> 完整帧 (Uint8Array) ----------
+    function encodePacket(payloadStr) {
+      const payloadBytes = stringToBytes(payloadStr);
+      const lengthVal = payloadBytes.length; // 0~255
+      
+      // 构建帧: 前导码 + 长度 + payload + 校验和
+      const packet = new Uint8Array(3 + lengthVal);
+      packet[0] = PREAMBLE;
+      packet[1] = lengthVal;
+      packet.set(payloadBytes, 2);
+      const checksum = computeChecksum(lengthVal, payloadBytes);
+      packet[packet.length - 1] = checksum;
+      return packet;
+    }
+
+    // 生成发送方详情展示
+    function updateSenderUI(packetBytes) {
+      if (!packetBytes || packetBytes.length < 3) {
+        senderHexPacket.textContent = '—';
+        senderPacketDetails.textContent = '前导码: — | 长度: — | 载荷(hex): — | 校验和: —';
+        return;
+      }
+      const hexStr = bytesToHex(packetBytes);
+      senderHexPacket.textContent = hexStr;
+      
+      const preamble = packetBytes[0];
+      const lengthVal = packetBytes[1];
+      const payloadPart = packetBytes.slice(2, 2 + lengthVal);
+      const checksum = packetBytes[packetBytes.length - 1];
+      
+      const payloadHex = bytesToHex(payloadPart) || '(空)';
+      senderPacketDetails.textContent = 
+        `前导码: 0x${preamble.toString(16).toUpperCase().padStart(2,'0')} | 长度: ${lengthVal} | 载荷(hex): ${payloadHex} | 校验和: 0x${checksum.toString(16).toUpperCase().padStart(2,'0')}`;
+    }
+
+    // ---------- 噪声注入 (随机翻转一个比特) ----------
+    function applyNoise(originalPacket) {
+      if (originalPacket.length === 0) return originalPacket;
+      const noisy = new Uint8Array(originalPacket);
+      const byteIndex = Math.floor(Math.random() * noisy.length);
+      const bitIndex = Math.floor(Math.random() * 8); // 0-7
+      noisy[byteIndex] ^= (1 << bitIndex);  // 翻转特定位
+      return noisy;
+    }
+
+    // ---------- 解码与验证 (核心) ----------
+    function decodePacket(receivedBytes) {
+      // 返回值结构
+      const result = {
+        validPreamble: false,
+        validChecksum: false,
+        lengthField: 0,
+        payloadBytes: new Uint8Array(0),
+        decodedString: '',
+        computedChecksum: 0,
+        receivedChecksum: 0,
+        errorMessage: '',
+        rawBytes: receivedBytes
+      };
+
+      if (!receivedBytes || receivedBytes.length < 3) {
+        result.errorMessage = '帧太短 (至少需要3字节)';
+        return result;
+      }
+
+      const preamble = receivedBytes[0];
+      result.validPreamble = (preamble === PREAMBLE);
+      const lengthVal = receivedBytes[1];
+      result.lengthField = lengthVal;
+
+      // 检查长度是否导致越界
+      const expectedTotalLen = 3 + lengthVal;
+      if (receivedBytes.length < expectedTotalLen) {
+        result.errorMessage = `长度字段 ${lengthVal} 导致帧长需 ${expectedTotalLen}，实际只有 ${receivedBytes.length} 字节`;
+        // 仍尝试读取可用部分
+      }
+
+      // 提取payload (尽量不超过实际长度)
+      const maxPayloadLen = Math.min(lengthVal, receivedBytes.length - 3);
+      let payload = new Uint8Array(maxPayloadLen);
+      if (maxPayloadLen > 0) {
+        payload = receivedBytes.slice(2, 2 + maxPayloadLen);
+      }
+      result.payloadBytes = payload;
+
+      // 获取收到的校验和 (如果长度足够)
+      let receivedChecksum = 0;
+      if (receivedBytes.length >= 3 + lengthVal) {
+        receivedChecksum = receivedBytes[2 + lengthVal];
+      } else if (receivedBytes.length > 2) {
+        // 如果不够，取最后一个字节当作校验和（容错）
+        receivedChecksum = receivedBytes[receivedBytes.length - 1];
+      }
+      result.receivedChecksum = receivedChecksum;
+
+      // 计算正确的校验和 (基于长度字段和提取的payload)
+      const computed = computeChecksum(lengthVal, payload);
+      result.computedChecksum = computed;
+      
+      // 校验和有效条件：帧长度足够包含校验和 且 计算值==收到值
+      const checksumAvailable = (receivedBytes.length >= 3 + lengthVal);
+      result.validChecksum = checksumAvailable && (computed === receivedChecksum);
+
+      // 解码字符串 (从payload字节)
+      try {
+        const decoder = new TextDecoder('utf-8', { fatal: false });
+        result.decodedString = decoder.decode(payload);
+      } catch (e) {
+        result.decodedString = '[解码错误]';
+      }
+
+      if (!result.validPreamble) result.errorMessage = '前导码错误 (期望 0xAA)';
+      else if (!checksumAvailable) result.errorMessage = '帧不完整，无法获取校验和';
+      else if (!result.validChecksum) result.errorMessage = `校验和不匹配 (计算:0x${computed.toString(16).toUpperCase()} vs 收到:0x${receivedChecksum.toString(16).toUpperCase()})`;
+      else result.errorMessage = '';
+
+      return result;
+    }
+
+    // 更新接收者UI
+    function updateReceiverUI(decodeResult) {
+      const res = decodeResult;
+      const raw = res.rawBytes;
+      
+      if (!raw || raw.length === 0) {
+        receiverHexPacket.textContent = '—';
+        decodedPayloadDisplay.textContent = '(无数据)';
+        preambleStatus.textContent = '🔍 前导码: ?';
+        checksumStatus.textContent = '🧮 校验和: ?';
+        lengthStatus.textContent = '📏 长度字段: ?';
+        receiverDetails.textContent = '计算校验和: — | 实际载荷长度: — | 状态: 等待接收';
+        receiveStatusIcon.textContent = '⏳ 等待数据';
+        receiveStatusIcon.className = 'badge';
+        return;
+      }
+
+      // 十六进制显示
+      receiverHexPacket.textContent = bytesToHex(raw);
+      
+      // 前导码状态
+      const preambleOk = res.validPreamble;
+      preambleStatus.textContent = preambleOk ? '✅ 前导码: 有效 (0xAA)' : `❌ 前导码: 无效 (0x${raw[0]?.toString(16).toUpperCase().padStart(2,'0')})`;
+      preambleStatus.className = preambleOk ? 'badge success' : 'badge error';
+      
+      // 长度状态
+      lengthStatus.textContent = `📏 长度字段: ${res.lengthField}`;
+      
+      // 校验和状态
+      const checksumOk = res.validChecksum;
+      checksumStatus.textContent = checksumOk ? '✅ 校验和: 正确' : `❌ 校验和错误 (计算:0x${res.computedChecksum.toString(16).toUpperCase()})`;
+      checksumStatus.className = checksumOk ? 'badge success' : 'badge error';
+      
+      // 总体状态图标
+      if (preambleOk && checksumOk) {
+        receiveStatusIcon.textContent = '✅ 接收成功 · 帧完整';
+        receiveStatusIcon.className = 'badge success';
+      } else {
+        receiveStatusIcon.textContent = '⚠️ 传输错误 / 帧损坏';
+        receiveStatusIcon.className = 'badge error';
+      }
+
+      // 解码显示
+      decodedPayloadDisplay.textContent = res.decodedString || '(空消息)';
+      
+      // 详细栏
+      const payloadLen = res.payloadBytes.length;
+      receiverDetails.textContent = `计算校验和: 0x${res.computedChecksum.toString(16).toUpperCase().padStart(2,'0')} | 实际载荷长度: ${payloadLen} | 状态: ${res.errorMessage || (preambleOk&&checksumOk?'正常':'异常')}`;
+    }
+
+    // ---------- 核心流程: 编码 + (可选噪声) + 更新接收端 ----------
+    function performEncodeAndSend() {
+      // 1. 获取输入并编码
+      const inputText = payloadInput.value || '';
+      let originalPacket = encodePacket(inputText);
+      
+      // 更新发送方UI (展示干净编码包)
+      updateSenderUI(originalPacket);
+      
+      // 2. 决定是否加噪声
+      let transmitPacket = originalPacket;
+      if (noiseCheckbox.checked) {
+        transmitPacket = applyNoise(originalPacket);
+      }
+      
+      // 3. 存储为当前接收字节
+      currentReceivedBytes = transmitPacket;
+      
+      // 4. 解码并刷新接收者
+      const decodeResult = decodePacket(currentReceivedBytes);
+      updateReceiverUI(decodeResult);
+      
+      // 顺便更新字符计数
+      updateCharCount();
+    }
+
+    // 单独重新解析 (基于已存储的 currentReceivedBytes)
+    function performDecodeOnly() {
+      if (!currentReceivedBytes) {
+        // 如果没有数据，尝试用当前输入构造一个干净的包作为展示? 但最好提醒
+        if (payloadInput.value) {
+          currentReceivedBytes = encodePacket(payloadInput.value);
+        } else {
+          alert('暂无接收数据，请先点击“编码并发送”');
+          return;
+        }
+      }
+      const decodeResult = decodePacket(currentReceivedBytes);
+      updateReceiverUI(decodeResult);
+    }
+
+    // ---------- 初始化 & 事件绑定 ----------
+    function initialize() {
+      updateCharCount();
+      
+      // 初始默认编码发送一次 (展示示例)
+      setTimeout(() => {
+        performEncodeAndSend();
+      }, 20);
+      
+      // 监听输入变化更新计数
+      payloadInput.addEventListener('input', updateCharCount);
+      
+      // 编码并发送
+      encodeSendBtn.addEventListener('click', performEncodeAndSend);
+      
+      // 重新解析按钮
+      decodeOnlyBtn.addEventListener('click', performDecodeOnly);
+      
+      // 示例按钮
+      exampleHello.addEventListener('click', () => {
+        payloadInput.value = 'Hello, Protocol!';
+        updateCharCount();
+        performEncodeAndSend();
+      });
+      exampleChinese.addEventListener('click', () => {
+        payloadInput.value = '网络协议 · 编码解码';
+        updateCharCount();
+        performEncodeAndSend();
+      });
+      exampleLong.addEventListener('click', () => {
+        payloadInput.value = 'TCP/IP 帧模拟: 长度最大255字节。校验采用异或。';
+        updateCharCount();
+        performEncodeAndSend();
+      });
+      
+      // 如果勾选噪声时，不自动重发；但可以保留
+    }
+
+    // 启动
+    initialize();
+  })();
+</script>
+</body>
+</html>
